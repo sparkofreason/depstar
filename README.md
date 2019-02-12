@@ -19,16 +19,16 @@ Install this tool to an alias in `$PROJECT/deps.edn` or `$HOME/.clojure/deps.edn
 Create an uberjar by invoking `depstar` with the desired jar name:
 
 ```bash
-clj -A:depstar -m hf.depstar.uberjar MyProject.jar
+clojure -A:depstar -m hf.depstar.uberjar MyProject.jar
 ```
 
 Create a (library) jar by invoking `depstar` with the desired jar name:
 
 ```bash
-clj -A:depstar -m hf.depstar.jar MyLib.jar
+clojure -A:depstar -m hf.depstar.jar MyLib.jar
 ```
 
-`depstar` uses the classpath computed by `clj`.
+`depstar` uses the classpath computed by `clojure`.
 For example, add web assets into an uberjar by including an alias in your `deps.edn`:
 
 ```clj
@@ -39,7 +39,7 @@ For example, add web assets into an uberjar by including an alias in your `deps.
 Then invoke `depstar` with the chosen aliases:
 
 ```bash
-clj -A:depstar:webassets -m hf.depstar.uberjar MyProject.jar
+clojure -A:depstar:webassets -m hf.depstar.uberjar MyProject.jar
 ```
 
 Note that `depstar` does no AOT compilation and does not add a manifest to the jar file. You can run the uberjar as follows
