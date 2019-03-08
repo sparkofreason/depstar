@@ -34,8 +34,9 @@
     :noop))
 
 (defmulti clash (fn [filename in target]
-                  (prn {:warning "clashing jar item" :path filename})
-                  (clash-strategy filename)))
+                  (let [stategy (clash-strategy filename)]
+                    (prn {:warning "clashing jar item" :path filename :strategy stategy})
+                    stategy)))
 
 (defmethod clash
   :merge-edn
