@@ -201,8 +201,8 @@
   * else if depstar.debug system property is set, use that.
   For now, we just treat this as a Boolean (true|false)."
   []
-  (let [level (or (System/getenv "DEPSTAR_DEBUG")
-                  (System/getProperty "depstar.debug"))]
+  (when-let [level (or (System/getenv "DEPSTAR_DEBUG")
+                       (System/getProperty "depstar.debug"))]
     (case level
       "true"  true
       "false" false ;; because (if (Boolean. "false") :is-truthy :argh!)
