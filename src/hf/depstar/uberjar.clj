@@ -15,6 +15,8 @@
 ;; clj -M options?
 ;; look into MANIFEST entries
 
+(def ^:dynamic ^:private *debug* nil)
+
 (defonce ^FileSystem FS (FileSystems/getDefault))
 
 (defn path
@@ -193,11 +195,28 @@
   [p]
   (re-find #"depstar" p))
 
+(defn- debug-level
+  "Return the requested debug level:
+  * if DEPSTAR_DEBUG env var is set, use that,
+  * else if depstar.debug system property is set, use that.
+  For now, we just treat this as a Boolean (true|false)."
+  []
+  (let [level (or (System/getenv "DEPSTAR_DEBUG")
+                  (System/getProperty "depstar.debug"))]
+    (case level
+      "true"  true
+      "false" false ;; because (if (Boolean. "false") :is-truthy :argh!)
+      (throw (ex-info "depstar debug should be true or false"
+                      {:level    level
+                       :env      (System/getenv "DEPSTAR_DEBUG")
+                       :property (System/getProperty "depstar.debug")})))))
+
 (defn run
   [{:keys [dest jar] :or {jar :uber} :as options}]
   (let [tmp (Files/createTempDirectory "uberjar" (make-array FileAttribute 0))
         cp (into [] (remove depstar-itself?) (current-classpath))]
-    (run! #(copy-source % tmp options) cp)
+    (binding [*debug* (debug-level)]
+      (run! #(copy-source % tmp options) cp))
     (println "Writing" (name jar) "jar:" dest)
     (write-jar tmp (path dest))))
 
