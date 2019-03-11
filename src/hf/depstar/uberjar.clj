@@ -43,9 +43,11 @@
 (defmethod clash
   :merge-edn
   [_ in target]
-  (let [er #(with-open [r (PushbackReader. %)] (edn/read r))
-        f1 (er (jio/reader in))
-        f2 (er (Files/newBufferedReader target))]
+  (let [;; read but do not close input stream
+        f1 (edn/read (PushbackReader. (jio/reader in)))
+        ;; read and then close target since we will rewrite it
+        f2 (with-open [r (PushbackReader. (Files/newBufferedReader target))]
+             (edn/read r))]
     (with-open [w (Files/newBufferedWriter target (make-array OpenOption 0))]
       (binding [*out* w]
         (prn (merge f1 f2))))))
@@ -92,7 +94,7 @@
                      java.io.BufferedInputStream.
                      JarInputStream.)]
     (loop []
-      (when-let [entry (try (.getNextJarEntry is) (catch Exception _))]
+      (when-let [entry (.getNextJarEntry is)]
         (f is entry)
         (recur)))))
 
