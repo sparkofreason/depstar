@@ -111,6 +111,10 @@
              (re-find #"\.jar$" (.toString p)))
         :jar
 
+        (and (Files/isRegularFile p symlink-opts)
+             (re-find #"\.pom$" (.toString p)))
+        :skip
+
         :else :unknown)
       :not-found)))
 
@@ -160,6 +164,11 @@
   :not-found
   [src _dest _options]
   (prn {:warning "could not find classpath entry" :path src}))
+
+(defmethod copy-source*
+  :skip
+  [src _dest _options]
+  (prn {:warning "skipping classpath entry" :path src}))
 
 (defn copy-source
   [src dest options]
