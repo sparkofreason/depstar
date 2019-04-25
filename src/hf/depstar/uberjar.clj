@@ -68,24 +68,32 @@
   [_ in target])
   ;; do nothing, first file wins
 
+(def ^:private exclude-patterns
+  "Filename patterns to exclude. These are checked with re-matches and
+  should therefore be complete filename matches including any path."
+  [#"project.clj"
+   #"LICENSE"
+   #"COPYRIGHT"
+   #"\.pom$" #"module-info\.class$"
+   #"(?i)META-INF/.*\.(?:MF|SF|RSA|DSA)"
+   #"(?i)META-INF/(?:INDEX\.LIST|DEPENDENCIES|NOTICE|LICENSE)(?:\.txt)?"])
+
 (defn excluded?
   [filename]
-  (or (#{"project.clj"
-         "LICENSE"
-         "COPYRIGHT"} filename)
-      (re-matches #"(?i)META-INF/.*\.(?:MF|SF|RSA|DSA)" filename)
-      (re-matches #"(?i)META-INF/(?:INDEX\.LIST|DEPENDENCIES|NOTICE|LICENSE)(?:\.txt)?" filename)))
+  (some #(re-matches % filename) exclude-patterns))
 
 (defn copy!
   ;; filename drives strategy
   [filename ^InputStream in ^Path target & [last-mod]]
-  (when-not (excluded? filename)
+  (if-not (excluded? filename)
     (if (Files/exists target (make-array LinkOption 0))
       (clash filename in target)
       (do
         (Files/copy in target ^"[Ljava.nio.file.CopyOption;" (make-array CopyOption 0))
         (when last-mod
-          (Files/setLastModifiedTime target last-mod))))))
+          (Files/setLastModifiedTime target last-mod))))
+    (when *debug*
+      (prn {:excluded filename}))))
 
 (defn consume-jar
   [^Path path f]
@@ -110,10 +118,6 @@
         (and (Files/isRegularFile p symlink-opts)
              (re-find #"\.jar$" (.toString p)))
         :jar
-
-        (and (Files/isRegularFile p symlink-opts)
-             (re-find #"\.pom$" (.toString p)))
-        :skip
 
         :else :unknown)
       :not-found)))
@@ -164,11 +168,6 @@
   :not-found
   [src _dest _options]
   (prn {:warning "could not find classpath entry" :path src}))
-
-(defmethod copy-source*
-  :skip
-  [src _dest _options]
-  (prn {:warning "skipping classpath entry" :path src}))
 
 (defn copy-source
   [src dest options]

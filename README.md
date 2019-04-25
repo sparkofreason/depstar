@@ -12,7 +12,7 @@ Install this tool to an alias in `$PROJECT/deps.edn` or `$HOME/.clojure/deps.edn
 {
   :aliases {:depstar
               {:extra-deps
-                 {seancorfield/depstar {:mvn/version "0.1.6"}}}}
+                 {seancorfield/depstar {:mvn/version "0.1.7"}}}}
 }
 ```
 
@@ -51,6 +51,7 @@ java -cp MyProject.jar clojure.main -m project.core
 
 # Changes
 
+* 0.1.7 -- Apr 24, 2019 -- Fix #6 by excluding `*.pom` files; Fix #7 by excluding `module-info.class` files; lists excluded files if debugging enabled.
 * 0.1.6 -- Mar 10, 2019 -- Fix for JARs containing `data_readers.clj` (do not close input stream!); supports `-Ddepstar.debug=true` and `DEPSTAR_DEBUG=true` to be more verbose.
 * 0.1.5 -- Oct 24, 2018 -- Fix for timestamp preservation.
 * 0.1.2 -- Oct 23, 2018 -- Initial fork with (incorrect) fix for exception from JARs containing `data_readers.clj`; `hf.depstar.jar` namespace added.
