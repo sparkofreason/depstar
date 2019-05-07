@@ -19,7 +19,7 @@
 (def ^:dynamic ^:private *debug* nil)
 
 (defonce ^FileSystem FS (FileSystems/getDefault))
-(defonce ^FileSystem MemFS (Jimfs/newFileSystem (Configuration/windows)))
+(defonce ^FileSystem MemFS (Jimfs/newFileSystem (Configuration/unix)))
 
 (defn path
   ^Path [s]
@@ -149,10 +149,10 @@
           (visitFile [_ p attrs]
             (let [f (.relativize src p)]
               (with-open [is (Files/newInputStream p (make-array OpenOption 0))]
-                (copy! (.toString f) is (.resolve dest (.toString f)))))
+                (copy! (.toString f) is (.resolve dest (clojure.string/replace (.toString f) #"\\" "/")))))
             FileVisitResult/CONTINUE)
           (preVisitDirectory [_ p attrs]
-            (Files/createDirectories (.resolve dest (.toString (.relativize src p)))
+            (Files/createDirectories (.resolve dest (clojure.string/replace (.toString (.relativize src p)) #"\\" "/"))
                                      (make-array FileAttribute 0))
             FileVisitResult/CONTINUE)
           (postVisitDirectory [_ p ioexc]
