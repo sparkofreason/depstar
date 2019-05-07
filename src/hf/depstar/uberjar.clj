@@ -8,7 +8,8 @@
                           FileVisitResult FileVisitor
                           Path]
            [java.nio.file.attribute BasicFileAttributes FileAttribute]
-           [java.util.jar JarInputStream JarOutputStream JarEntry]))
+           [java.util.jar JarInputStream JarOutputStream JarEntry]
+           [com.google.common.jimfs Jimfs Configuration]))
 
 ;; future:
 ;; other knobs?
@@ -18,6 +19,7 @@
 (def ^:dynamic ^:private *debug* nil)
 
 (defonce ^FileSystem FS (FileSystems/getDefault))
+(defonce ^FileSystem MemFS (Jimfs/newFileSystem (Configuration/windows)))
 
 (defn path
   ^Path [s]
@@ -147,10 +149,10 @@
           (visitFile [_ p attrs]
             (let [f (.relativize src p)]
               (with-open [is (Files/newInputStream p (make-array OpenOption 0))]
-                (copy! (.toString f) is (.resolve dest f))))
+                (copy! (.toString f) is (.resolve dest (.toString f)))))
             FileVisitResult/CONTINUE)
           (preVisitDirectory [_ p attrs]
-            (Files/createDirectories (.resolve dest (.relativize src p))
+            (Files/createDirectories (.resolve dest (.toString (.relativize src p)))
                                      (make-array FileAttribute 0))
             FileVisitResult/CONTINUE)
           (postVisitDirectory [_ p ioexc]
@@ -223,7 +225,7 @@
 
 (defn run
   [{:keys [dest jar] :or {jar :uber} :as options}]
-  (let [tmp (Files/createTempDirectory "uberjar" (make-array FileAttribute 0))
+  (let [tmp (Files/createDirectory (.getPath MemFS "uberjar" (make-array String 0)) (make-array FileAttribute 0))
         cp (into [] (remove depstar-itself?) (current-classpath))]
     (binding [*debug* (debug-level)]
       (run! #(copy-source % tmp options) cp))
